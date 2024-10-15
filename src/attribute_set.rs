@@ -15,15 +15,15 @@ pub struct AttributeSetRef<T> {
 
 impl<T: EvdevEnum> AttributeSetRef<T> {
     #[inline]
-    fn new(bitslice: &BitSlice<u8>) -> &Self {
+    fn new(bitslice: &BitSlice<u16>) -> &Self {
         // SAFETY: for<T> AttributeSet<T> is repr(transparent) over BitSlice<u8>
-        unsafe { &*(bitslice as *const BitSlice<u8> as *const Self) }
+        unsafe { &*(bitslice as *const BitSlice<u16> as *const Self) }
     }
 
     #[inline]
-    fn new_mut(bitslice: &mut BitSlice<u8>) -> &mut Self {
+    fn new_mut(bitslice: &mut BitSlice<u16>) -> &mut Self {
         // SAFETY: for<T> AttributeSet<T> is repr(transparent) over BitSlice<u8>
-        unsafe { &mut *(bitslice as *mut BitSlice<u8> as *mut Self) }
+        unsafe { &mut *(bitslice as *mut BitSlice<u16> as *mut Self) }
     }
 
     /// Returns `true` if this AttributeSet contains the passed T.
@@ -123,16 +123,16 @@ impl<T: ArrayedEvdevEnum> AttributeSet<T> {
         }
     }
 
-    fn as_bitslice(&self) -> &BitSlice<u8> {
+    fn as_bitslice(&self) -> &BitSlice<u16> {
         T::array_as_slice(&self.container)
     }
 
-    fn as_mut_bitslice(&mut self) -> &mut BitSlice<u8> {
+    fn as_mut_bitslice(&mut self) -> &mut BitSlice<u16> {
         T::array_as_slice_mut(&mut self.container)
     }
 
     #[inline]
-    pub(crate) fn as_mut_raw_slice(&mut self) -> &mut [u8] {
+    pub(crate) fn as_mut_raw_slice(&mut self) -> &mut [u16] {
         T::array_as_buf(&mut self.container)
     }
 }
@@ -216,7 +216,7 @@ macro_rules! evdev_enum {
     ($t:ty, Array, $($(#[$attr:meta])* $c:ident = $val:expr,)*) => {
         evdev_enum!(
             $t,
-            Array: bitvec::BitArr!(for <$t>::COUNT, in u8),
+            Array: bitvec::BitArr!(for <$t>::COUNT, in u16),
             bitvec::array::BitArray::as_raw_mut_slice,
             bitvec::array::BitArray::ZERO,
             $($(#[$attr])* $c = $val,)*
@@ -225,7 +225,7 @@ macro_rules! evdev_enum {
     ($t:ty, box Array, $($(#[$attr:meta])* $c:ident = $val:expr,)*) => {
         evdev_enum!(
             $t,
-            Array: Box<bitvec::BitArr!(for <$t>::COUNT, in u8)>,
+            Array: Box<bitvec::BitArr!(for <$t>::COUNT, in u16)>,
             bitvec::array::BitArray::as_raw_mut_slice,
             Box::new(bitvec::array::BitArray::ZERO),
             $($(#[$attr])* $c = $val,)*
@@ -238,13 +238,13 @@ macro_rules! evdev_enum {
     ) => {
         impl $crate::attribute_set::ArrayedEvdevEnum for $t {
             type Array = $Array;
-            fn array_as_slice(arr: &Self::Array) -> &bitvec::slice::BitSlice<u8> {
+            fn array_as_slice(arr: &Self::Array) -> &bitvec::slice::BitSlice<u16> {
                 arr
             }
-            fn array_as_slice_mut(arr: &mut Self::Array) -> &mut bitvec::slice::BitSlice<u8> {
+            fn array_as_slice_mut(arr: &mut Self::Array) -> &mut bitvec::slice::BitSlice<u16> {
                 arr
             }
-            fn array_as_buf(arr: &mut Self::Array) -> &mut [u8] {
+            fn array_as_buf(arr: &mut Self::Array) -> &mut [u16] {
                 $arr_as_buf(arr)
             }
             fn zeroed_array() -> Self::Array {
